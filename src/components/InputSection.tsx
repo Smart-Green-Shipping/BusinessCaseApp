@@ -205,7 +205,7 @@ export function InputSection({
         </div>
         <div>
           <label className="block text-sm font-medium text-deep-blue mb-1">
-            Wind Savings (%)
+            FastRig Wind Savings (%)
           </label>
           <input
             type="number"
@@ -252,7 +252,7 @@ export function InputSection({
             <span className="font-mono">{formatNumber(ghgIntensity)} gCO2eq/MJ</span>
           </p>
           <p className="flex justify-between text-ice">
-            <span>With Wind:</span>
+            <span>With FastRig:</span>
             <span className="font-mono">{formatNumber(adjustedWindGHGIntensity)} gCO2eq/MJ</span>
           </p>
           <p className="text-xs text-ice/80 mt-1">Values should be confirmed with fuel supplier</p>
