@@ -2,29 +2,40 @@ import { supabase } from './supabase';
 import { YEARLY_TARGETS, VLSFO_ENERGY, CII_REDUCTION_FACTORS, CII_RATING_BOUNDARIES, SHIP_TYPE_PARAMETERS } from './constants';
 import type { ShipConfig, ShipType, CIIResults } from './types';
 
-// This will be populated from the database
-let CO2_FACTORS: Record<string, number> = {
-  'HFO': 3.114,  // Default values until loaded from database
-  'MDO': 3.206
-};
+// These will be populated from the database
+let CO2_FACTORS: Record<string, number> = {};
+let ETS_EXEMPT_FUELS: Record<string, boolean> = {};
+let CH4_FACTORS: Record<string, number> = {};
+let N2O_FACTORS: Record<string, number> = {};
 
-// Load CO2 factors from database
+// Load factors from database
 export const loadCO2Factors = async () => {
   const { data, error } = await supabase
     .from('fuel_data')
-    .select('fuel_name, gCO2pergFuel');
+    .select('fuel_name, gCO2pergFuel, ets_exempt, gCH4pergFuel, gN2OpergFuel');
   
   if (error || !data) {
-    console.error('Failed to load CO2 factors:', error);
+    console.error('Failed to load fuel factors:', error);
     return;
   }
   
-  // Update CO2_FACTORS with database values
+  // Update factors with database values
   data.forEach(fuel => {
     CO2_FACTORS[fuel.fuel_name] = fuel.gCO2pergFuel;
+    CH4_FACTORS[fuel.fuel_name] = fuel.gCH4pergFuel;
+    N2O_FACTORS[fuel.fuel_name] = fuel.gN2OpergFuel;
+    
+    if (fuel.ets_exempt) {
+      ETS_EXEMPT_FUELS[fuel.fuel_name] = true;
+    }
   });
   
-  console.log('CO2 factors loaded from database:', CO2_FACTORS);
+  console.log('Fuel factors loaded from database:', {
+    CO2: CO2_FACTORS,
+    CH4: CH4_FACTORS,
+    N2O: N2O_FACTORS,
+    ETSExempt: ETS_EXEMPT_FUELS
+  });
 };
 
 export const calculateGHGIntensity = async (ship: ShipConfig) => {
@@ -50,9 +61,21 @@ export const calculateGHGIntensity = async (ship: ShipConfig) => {
     return { ghgIntensity: 0, energyContent: 0, mainFuelData: null, auxFuelData: null };
   }
   
-  // Update CO2_FACTORS with the values from the database
+  // Update factors with the values from the database
   CO2_FACTORS[ship.main.fuel] = mainFuelData.gCO2pergFuel;
   CO2_FACTORS[ship.aux.fuel] = auxFuelData.gCO2pergFuel;
+  CH4_FACTORS[ship.main.fuel] = mainFuelData.gCH4pergFuel;
+  CH4_FACTORS[ship.aux.fuel] = auxFuelData.gCH4pergFuel;
+  N2O_FACTORS[ship.main.fuel] = mainFuelData.gN2OpergFuel;
+  N2O_FACTORS[ship.aux.fuel] = auxFuelData.gN2OpergFuel;
+  
+  // Update ETS_EXEMPT_FUELS
+  if (mainFuelData.ets_exempt) {
+    ETS_EXEMPT_FUELS[ship.main.fuel] = true;
+  }
+  if (auxFuelData.ets_exempt) {
+    ETS_EXEMPT_FUELS[ship.aux.fuel] = true;
+  }
   
   // Calculate energy content (MJ)
   const mainEnergy = mainConsumpG * mainFuelData.lcv_mj_per_gfuel;
@@ -88,59 +111,30 @@ export const calculateETSCost = (
   euExposure: number,
   year: number
 ) => {
-  // Get fuel data from database
-  const getFuelData = async (fuelName: string) => {
-    const { data, error } = await supabase
-      .from('fuel_data')
-      .select('*')
-      .eq('fuel_name', fuelName)
-      .single();
-    
-    if (error || !data) {
-      console.error('Fuel data not found:', fuelName, error);
-      return null;
-    }
-    
-    return data;
-  };
+  // Get CO2 factors from the database cache
+  const mainCO2Factor = CO2_FACTORS[mainFuel];
+  const auxCO2Factor = CO2_FACTORS[auxFuel];
 
-  // Calculate CO2e emissions including CH4 and N2O
-  const calculateCO2e = (consumption: number, fuelData: any) => {
-    if (!fuelData) return 0;
-    
-    const co2Factor = CO2_FACTORS[fuelData.fuel_name] || 3.114;
-    const co2Emissions = consumption * co2Factor;
-    
-    // CH4 has a GWP of 28, N2O has a GWP of 265
-    const ch4Emissions = consumption * fuelData.gCH4pergFuel * 28;
-    const n2oEmissions = consumption * fuelData.gN2OpergFuel * 265;
-    
-    // For ETS exempt fuels, don't count the CO2 emissions, but still count CH4 and N2O
-    const etsExempt = fuelData.ets_exempt || false;
-    const etsCO2 = etsExempt ? 0 : co2Emissions;
-    
-    return etsCO2 + ch4Emissions + n2oEmissions;
-  };
-
-  // Use a synchronous approach with predefined CO2 factors for now
-  // This will be enhanced when we have the full fuel data
-  const mainCO2Factor = CO2_FACTORS[mainFuel] || 3.114; // Default to HFO if not found
-  const auxCO2Factor = CO2_FACTORS[auxFuel] || 3.206; // Default to MDO if not found
+  // Get CH4 and N2O factors from the database cache
+  const mainCH4Factor = CH4_FACTORS[mainFuel];
+  const mainN2OFactor = N2O_FACTORS[mainFuel];
+  const auxCH4Factor = CH4_FACTORS[auxFuel];
+  const auxN2OFactor = N2O_FACTORS[auxFuel];
 
   // Check if fuels are ETS exempt
-  const isMainEtsExempt = ['Bio-Methanol', 'Bio-diesel', 'Ethanol'].includes(mainFuel);
-  const isAuxEtsExempt = ['Bio-Methanol', 'Bio-diesel', 'Ethanol'].includes(auxFuel);
+  const isMainEtsExempt = ETS_EXEMPT_FUELS[mainFuel] || false;
+  const isAuxEtsExempt = ETS_EXEMPT_FUELS[auxFuel] || false;
 
-  // Calculate CO2 emissions (tonnes)
+  // Calculate CO2 emissions (tonnes) - zero for ETS exempt fuels
   const mainCO2 = isMainEtsExempt ? 0 : mainConsumption * mainCO2Factor;
   const auxCO2 = isAuxEtsExempt ? 0 : auxConsumption * auxCO2Factor;
 
-  // Add CH4 and N2O emissions (CO2e)
-  // Approximate values for demonstration
-  const mainCH4 = mainConsumption * (mainFuel === 'LNG' ? 0.00185 : 0.00006) * 28;
-  const mainN2O = mainConsumption * 0.00002 * 265;
-  const auxCH4 = auxConsumption * 0.00004 * 28;
-  const auxN2O = auxConsumption * 0.00001 * 265;
+  // Add CH4 and N2O emissions (CO2e) - these always count for ETS
+  // CH4 has a GWP of 28, N2O has a GWP of 265
+  const mainCH4 = mainConsumption * mainCH4Factor * 28;
+  const mainN2O = mainConsumption * mainN2OFactor * 265;
+  const auxCH4 = auxConsumption * auxCH4Factor * 28;
+  const auxN2O = auxConsumption * auxN2OFactor * 265;
 
   const totalCO2e = mainCO2 + auxCO2 + mainCH4 + mainN2O + auxCH4 + auxN2O;
 
@@ -176,10 +170,10 @@ export const getCO2FactorPerTon = (fuelName: string): number => {
   // This ensures we display the correct carbon factor in the UI
   const factor = CO2_FACTORS[fuelName];
   
-  // If the factor is undefined or null, return a default value
+  // If the factor is undefined or null, return 0
   if (factor === undefined || factor === null) {
-    console.warn(`No CO2 factor found for fuel: ${fuelName}, using default`);
-    return fuelName.toLowerCase().includes('bio') ? 3.206 : 3.114;
+    console.warn(`No CO2 factor found for fuel: ${fuelName}`);
+    return 0;
   }
   
   return factor;
