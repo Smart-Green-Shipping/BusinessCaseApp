@@ -139,18 +139,12 @@ export function CostBenefitTab({ calculations, upfrontCost, yearlyCost, startYea
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Target</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Base GHG</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind GHG</th>
-                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Base Deficit</th>
-                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind Deficit</th>
-                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Base Compliance</th>
-                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind Compliance</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Base Mult.</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind Mult.</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Base Penalty</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind Penalty</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Base ETS</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind ETS</th>
-                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Base ETS CO2e</th>
-                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind ETS CO2e</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Fuel Savings</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Penalty Savings</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">ETS Savings</th>
@@ -159,6 +153,12 @@ export function CostBenefitTab({ calculations, upfrontCost, yearlyCost, startYea
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Raw Cumulative</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Cumulative Costs</th>
                   <th className="px-4 py-2 text-right font-medium text-deep-blue">Net Cumulative</th>
+                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Base GHG Deficit</th>
+                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind GHG Deficit</th>
+                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Base Compliance</th>
+                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind Compliance</th>
+                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Base ETS CO2e</th>
+                  <th className="px-4 py-2 text-right font-medium text-deep-blue">Wind ETS CO2e</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-deep-blue/10">
@@ -168,18 +168,12 @@ export function CostBenefitTab({ calculations, upfrontCost, yearlyCost, startYea
                     <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.target)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.baseGHGIntensity)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.windGHGIntensity)}</td>
-                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.baseDeficit)}</td>
-                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.windDeficit)}</td>
-                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.baseComplianceBalance || 0)}</td>
-                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.windComplianceBalance || 0)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.baseMultiplier)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.windMultiplier)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.basePenalty)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.windPenalty)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.baseETSCost)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.windETSCost)}</td>
-                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.baseETSCO2e)}</td>
-                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.windETSCO2e)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.fuelSavings)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.penaltySavings)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.etsSavings)}</td>
@@ -188,6 +182,12 @@ export function CostBenefitTab({ calculations, upfrontCost, yearlyCost, startYea
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.cumulativeRawSavings)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.cumulativeCosts)}</td>
                     <td className="px-4 py-2 text-right text-deep-blue">{formatCurrency(calc.netCumulative)}</td>
+                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.baseDeficit)}</td>
+                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.windDeficit)}</td>
+                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.baseComplianceBalance || 0)}</td>
+                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.windComplianceBalance || 0)}</td>
+                     <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.baseETSCO2e)}</td>
+                    <td className="px-4 py-2 text-right text-deep-blue">{formatNumber(calc.windETSCO2e)}</td>
                   </tr>
                 ))}
               </tbody>
