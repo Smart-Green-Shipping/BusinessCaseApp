@@ -205,7 +205,7 @@ export function InputSection({
         </div>
         <div>
           <label className="block text-sm font-medium text-deep-blue mb-1">
-            FastRig Wind Savings (%)
+            FastRig Savings (%)
           </label>
           <input
             type="number"
