@@ -255,6 +255,7 @@ export function InputSection({
             <span>With Wind:</span>
             <span className="font-mono">{formatNumber(adjustedWindGHGIntensity)} gCO2eq/MJ</span>
           </p>
+          <p className="text-xs text-ice/80 mt-1">Values should be confirmed with fuel supplier</p>
           <div className="mt-4 pt-4 border-t border-ice/20">
             <p className="text-sm font-medium text-ice mb-2">Carbon Factors:</p>
             <p className="flex justify-between text-sm text-ice">
