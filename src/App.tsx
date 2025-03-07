@@ -36,7 +36,7 @@ function App() {
   const [endYear, setEndYear] = useState(2050);
   const [shipType, setShipType] = useState<ShipType>('Bulk Carrier');
   const [dwt, setDwt] = useState(61000);
-  const [distance, setDistance] = useState(40000);
+  const [distance, setDistance] = useState(50000);
   const [shipConfig, setShipConfig] = useState<ShipConfig>(DEFAULT_SHIP);
   const [windSavings, setWindSavings] = useState(0.20);
   const [euExposure, setEuExposure] = useState(0.5);
@@ -136,26 +136,36 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const updateCIIResults = () => {
-      const mainCO2 = shipConfig.main.consumption * getCO2FactorPerTon(shipConfig.main.fuel);
-      const auxCO2 = shipConfig.aux.consumption * getCO2FactorPerTon(shipConfig.aux.fuel);
-      const totalCO2 = mainCO2 + auxCO2;
-
-      const results = calculateCIIResults(
-        shipType,
-        dwt,
-        startYear,
-        totalCO2,
-        distance,
-        windSavings
-      );
-
-      setCiiResults(results);
-    };
-
-    updateCIIResults();
+    loadCO2Factors(); // If this is synchronous or doesn't affect getCO2FactorPerTon
+  }, []);
+  
+  const updateCIIResults = useCallback(() => {
+    if (!shipConfig || !shipType || !dwt || !startYear || !distance || !windSavings) return;
+    
+    const mainCO2 = shipConfig.main.consumption * getCO2FactorPerTon(shipConfig.main.fuel);
+    const auxCO2 = shipConfig.aux.consumption * getCO2FactorPerTon(shipConfig.aux.fuel);
+    const totalCO2 = mainCO2 + auxCO2;
+  
+    const results = calculateCIIResults(
+      shipType,
+      dwt,
+      startYear,
+      totalCO2,
+      distance,
+      windSavings
+    );
+  
+    setCiiResults(results);
   }, [shipType, dwt, startYear, distance, windSavings, shipConfig]);
-
+  
+  // And use it in a useEffect hook like this:
+  useEffect(() => {
+    if (activeTab === 'cii') {
+      updateCIIResults();
+    }
+  }, [activeTab, updateCIIResults]);
+  
+  
   useEffect(() => {
     const updateCalculations = async () => {
       // Calculate baseline GHG intensity and energy content
