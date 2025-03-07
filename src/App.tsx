@@ -158,7 +158,7 @@ function App() {
     setCiiResults(results);
   }, [shipType, dwt, startYear, distance, windSavings, shipConfig]);
   
-  // And use it in a useEffect hook like this:
+  // This updates the CII calcs on CII tab load:
   useEffect(() => {
     if (activeTab === 'cii') {
       updateCIIResults();
