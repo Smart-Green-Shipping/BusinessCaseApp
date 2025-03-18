@@ -466,7 +466,7 @@ function App() {
                 alt="Logo"
                 className="h-12"
               />
-              <h1 className="text-2xl font-medium text-deep-blue">FastRig Buisness Case Builder</h1>
+              <h1 className="text-2xl font-medium text-deep-blue">FastRig Business Case Calculator</h1>
             </div>
             <div className="flex items-center gap-4">
               <ExportButton
